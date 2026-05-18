@@ -175,16 +175,15 @@ def sample_patient_doses(
     -------
     doses : array of shape (n,) — absorbed dose per patient in Gy
     """
-    if seed is not None:
-        np.random.seed(seed)
+    rng = np.random.default_rng(seed)
 
     p = ORGAN_PARAMS[organ]
 
     # Log-normal variability: multiply each parameter by exp(sigma * Z)
     # where sigma ~ cv for small cv (exact for log-normal)
-    A_slow_s  = p.A_slow  * np.random.lognormal(0, cv,        n)
-    lam_slow_s = p.lam_slow * np.random.lognormal(0, cv * 0.5, n)
-    A_fast_s  = p.A_fast  * np.random.lognormal(0, cv * 0.8,  n)
+    A_slow_s  = p.A_slow  * rng.lognormal(0, cv,        n)
+    lam_slow_s = p.lam_slow * rng.lognormal(0, cv * 0.5, n)
+    A_fast_s  = p.A_fast  * rng.lognormal(0, cv * 0.8,  n)
 
     ca    = A_fast_s / p.lam_fast + A_slow_s / lam_slow_s
     doses = p.S_value * ca * activity_GBq * 1000
@@ -230,12 +229,12 @@ def convergence_experiment(
     if sample_sizes is None:
         sample_sizes = np.logspace(1, 4.5, 35).astype(int)
 
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     true_dose = compute_reference_doses()[organ]
     errors, stds = [], []
 
     for n in sample_sizes:
-        trials = [naive_mc_dose(n, organ)[0] for _ in range(n_trials)]
+        trials = [naive_mc_dose(n, organ, seed=int(rng.integers(1 << 31)))[0] for _ in range(n_trials)]
         errors.append(abs(np.mean(trials) - true_dose))
         stds.append(np.std(trials))
 

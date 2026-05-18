@@ -59,12 +59,12 @@ def simulate_spect_measurements(
     -------
     (observed, true_values) : measured and true activity fractions at each timepoint
     """
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     p = ORGAN_PARAMS[organ]
     true_vals = time_activity_curve(
         scan_times, p.A_fast, p.lam_fast, p.A_slow, p.lam_slow
     )
-    observed = true_vals * np.random.lognormal(0, noise_cv, len(scan_times))
+    observed = true_vals * rng.lognormal(0, noise_cv, len(scan_times))
     return observed, true_vals
 
 
@@ -168,7 +168,7 @@ def metropolis_hastings(
     -------
     MCMCResult with posterior samples, acceptance rate, and derived quantities
     """
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     p = ORGAN_PARAMS[organ]
 
     samples  = np.zeros((n_samples, 2))
@@ -180,14 +180,14 @@ def metropolis_hastings(
     lp_c = log_posterior(A_slow_c, lam_slow_c, observed, scan_times, organ=organ)
 
     for i in range(n_samples):
-        A_slow_prop   = A_slow_c   + np.random.normal(0, prop_A_slow)
-        lam_slow_prop = lam_slow_c + np.random.normal(0, prop_lam_slow)
+        A_slow_prop   = A_slow_c   + rng.normal(0, prop_A_slow)
+        lam_slow_prop = lam_slow_c + rng.normal(0, prop_lam_slow)
 
         lp_prop = log_posterior(
             A_slow_prop, lam_slow_prop, observed, scan_times, organ=organ
         )
 
-        if np.log(np.random.uniform()) < lp_prop - lp_c:
+        if np.log(rng.uniform()) < lp_prop - lp_c:
             A_slow_c, lam_slow_c, lp_c = A_slow_prop, lam_slow_prop, lp_prop
             accepted += 1
 

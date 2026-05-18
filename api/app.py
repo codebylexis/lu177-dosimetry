@@ -59,6 +59,8 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# allow_origins=["*"] is intentionally permissive for local demo use.
+# Restrict to specific origins in any production deployment.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -209,6 +211,12 @@ def simulate_population(req: PopulationRequest):
     The key result: standard fixed dosing places ~65% of patients above
     the QUANTEC kidney safety limit; individualized MC dosing reduces that
     to ~4%.
+
+    Note: this is a synchronous handler (def, not async def), which is
+    correct for CPU-bound work in FastAPI — uvicorn runs it in a thread
+    pool so it does not block other requests. The multiprocessing.Pool
+    inside compare_dosing_strategies spawns worker processes, keeping
+    the GIL out of the picture entirely.
     """
     result = compare_dosing_strategies(
         n                = req.n_patients,

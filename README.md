@@ -125,6 +125,8 @@ The FastAPI service exposes four endpoints:
 
 Interactive docs: `http://localhost:8000/docs`
 
+> **CORS**: The API is configured with `allow_origins=["*"]` — intentionally permissive for local development and demo use. Restrict to specific origins before any production deployment.
+
 ---
 
 ## Methods
